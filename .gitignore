@@ -1,0 +1,5 @@
+# Python
+*.pyc
+
+# Pycahrm
+.idea
