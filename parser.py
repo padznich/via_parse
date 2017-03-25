@@ -4,9 +4,9 @@
 import xml.etree.ElementTree as Et
 
 
-def get_onward(elem):
+def get_itinerary(elem):
     """
-    Parse <OnwardPricedItinerary>...
+    Parse <OnwardPricedItinerary> or <ReturnPricedItinerary>
     :param elem: [STRING] xml-data
     :return: [LIST]
         [route, [sub_route_1, sub_route_2, ...]]
@@ -66,7 +66,9 @@ def get_flights(_file):
         sum_price = None
         for elem in flights:
             if elem.tag == "OnwardPricedItinerary":
-                flight = get_onward(elem)
+                flight = get_itinerary(elem)
+            if elem.tag == "ReturnPricedItinerary":
+                flight = get_itinerary(elem)
             if elem.tag == "Pricing":
                 sum_price = sum(
                     [float(price.text) for price in elem]
@@ -88,12 +90,14 @@ def show_diff(f_1, f_2):
     """
 
     out_diff = {}
+    f_1_dict = get_flights(f_1)
+    f_2_dict = get_flights(f_2)
 
-    for route, flights_list in get_flights(f_1).iteritems():
+    for route, flights_list in f_1_dict.iteritems():
 
         out_diff[route] = []
 
-        for val in get_flights(f_2)[route]:
+        for val in f_2_dict[route]:
             if val not in flights_list:
                 out_diff[route].append(val)
 
