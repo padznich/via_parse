@@ -114,9 +114,36 @@ def show_diff(f_1, f_2):
 
         out_diff[route] = []
 
-        for val in f_2_dict[route]:
-            if val not in flights_list:
-                out_diff[route].append(val)
+        # Condition for OnwardPricedItinerary only
+        cond_onward_1 = len(flights_list[0]) == 5
+        cond_onward_2 = len(f_2_dict[route][0]) == 5
+
+        # Condition for OnwardPricedItinerary only
+        cond_return_1 = len(flights_list[0]) == 9
+        cond_return_2 = len(f_2_dict[route][0]) == 9
+
+        if (cond_onward_1 and cond_onward_2) or \
+                cond_return_1 and cond_return_2:
+
+            for val in f_2_dict[route]:
+                if val not in flights_list:
+                    out_diff[route].append(val)
+
+        # In case if only f_2 has ReturnPricedItinerary
+        if cond_onward_1 and cond_return_2:
+            for val in f_2_dict[route]:
+                val = val[:4] + [val[8]]
+                if val not in flights_list:
+                    out_diff[route].append(val)
+
+        # In case if only f_1 has ReturnPricedItinerary
+        if cond_onward_2 and cond_return_1:
+            for val in f_2_dict[route]:
+                sliced_flights = [
+                    f[:4] + [f[8]] for f in flights_list
+                ]
+                if val not in sliced_flights:
+                    out_diff[route].append(val)
 
     return out_diff
 
@@ -132,3 +159,4 @@ if __name__ == "__main__":
         print k
         for i in v:
             print i
+            pass
