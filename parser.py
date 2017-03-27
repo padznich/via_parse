@@ -31,8 +31,10 @@ def get_itinerary(elem):
         destination = sub_flights[-1]["Destination"]
         time_depature = sub_flights[0]["DepartureTimeStamp"]
         time_arrival = sub_flights[-1]["ArrivalTimeStamp"]
-        flight_numbers = [i["FlightNumber"] for i in sub_flights]
-        sub_routes = [(i["Source"], i["Destination"]) for i in sub_flights]
+        flight_numbers = [item["FlightNumber"] for item in sub_flights]
+        sub_routes = [
+            (item["Source"], item["Destination"]) for item in sub_flights
+            ]
 
         key = "{}_{}".format(
             source,
@@ -62,31 +64,46 @@ def get_flights(_file):
 
     out = {}
     for flights in root.findall(xpath):
-        flight = None
+        onward_flight = None
+        return_flight = None
         sum_price = None
         for elem in flights:
             if elem.tag == "OnwardPricedItinerary":
-                flight = get_itinerary(elem)
+                onward_flight = get_itinerary(elem)
             if elem.tag == "ReturnPricedItinerary":
-                flight = get_itinerary(elem)
+                return_flight = get_itinerary(elem)
             if elem.tag == "Pricing":
                 sum_price = sum(
                     [float(price.text) for price in elem]
                 )
-        route = flight[0]
-        flight[1].append(sum_price)
-        if route not in out:
-            out[route] = [flight[1]]
+        route = onward_flight[0]
+        if return_flight:
+            onward_flight[1].extend(return_flight[1])
+            onward_flight[1].append(sum_price)
+            if route not in out:
+                out[route] = [onward_flight[1]]
+            else:
+                out[route].extend([onward_flight[1]])
         else:
-            out[route].extend([flight[1]])
+            onward_flight[1].append(sum_price)
+            if route not in out:
+                out[route] = [onward_flight[1]]
+            else:
+                out[route].extend([onward_flight[1]])
     return out
 
 
 def show_diff(f_1, f_2):
     """
-    Compare Flights from two xml-files
+    Compare Flights from file f_2 to  file f_1.
+    If route from f_2 not in f_1, then add it to out_diff dictionary
+
+    :param f_1: [STRING]
+        Path to xml-file 1
+    :param f_2: [STRING]
+        Path to xml-file 2
     :return: [DICT]
-        difference for each route
+        Difference between files
     """
 
     out_diff = {}
@@ -106,9 +123,12 @@ def show_diff(f_1, f_2):
 
 if __name__ == "__main__":
 
-    xml_1 = "RS_Via-3.xml"
-    xml_2 = "RS_ViaOW.xml"
+    # Conf
+    xml_file_1 = "RS_Via-3.xml"
+    xml_file_2 = "RS_ViaOW.xml"
 
-    for k, v in show_diff(xml_1, xml_2).iteritems():
+    # Main func
+    for k, v in show_diff(xml_file_1, xml_file_2).iteritems():
         print k
-        print v
+        for i in v:
+            print i
